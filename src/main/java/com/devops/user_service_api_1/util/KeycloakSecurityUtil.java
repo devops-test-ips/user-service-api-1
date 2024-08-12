@@ -16,7 +16,7 @@ public class KeycloakSecurityUtil {
     private String grantType;
     @Value("${keycloak.config.password}")
     private String password;
-    @Value("${spring.datasource.username}")
+    @Value("${keycloak.config.name}")
     private String username;
     @Value("${keycloak.config.secret}")
     private String secret;
