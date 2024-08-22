@@ -26,6 +26,7 @@ public class SecurityConfig {
         security.authorizeHttpRequests(authorize -> {
             authorize
                     .requestMatchers(HttpMethod.POST, "user-service/api/v1/users/signup").permitAll()
+                    .requestMatchers(HttpMethod.POST, "user-service/api/v1/users/login").permitAll()
                     .anyRequest().authenticated();
         });
         security.oauth2ResourceServer(t -> {

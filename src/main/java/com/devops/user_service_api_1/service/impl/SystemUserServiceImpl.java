@@ -3,17 +3,25 @@ package com.devops.user_service_api_1.service.impl;
 import com.devops.user_service_api_1.dto.request.RequestSystemUserDto;
 import com.devops.user_service_api_1.entity.SystemUser;
 import com.devops.user_service_api_1.exception.DuplicateEntryException;
+import com.devops.user_service_api_1.exception.EntryNotFoundException;
 import com.devops.user_service_api_1.repo.SystemUserRepo;
 import com.devops.user_service_api_1.service.SystemUserService;
 import com.devops.user_service_api_1.util.KeycloakSecurityUtil;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,7 +109,21 @@ public class SystemUserServiceImpl implements SystemUserService {
     }
 
     @Override
-    public void login(String email, String password) {
-
+    public Object login(String email, String password) {
+        Optional<SystemUser> selectedUserObj = systemUserRepo.findByEmail(email);
+        if (selectedUserObj.isEmpty()) {
+            throw new EntryNotFoundException("User not found");
+        }
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", clientId);
+        requestBody.add("grant_type", OAuth2Constants.PASSWORD);
+        requestBody.add("username", email);
+        requestBody.add("client_secret", secret);
+        requestBody.add("password", password);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Object> response = restTemplate.postForEntity(keyCloakApiUrl, requestBody, Object.class);
+        return response.getBody();
     }
 }
